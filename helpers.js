@@ -1,4 +1,5 @@
-var pointLight, sun, moon, satellite, earth, earthOrbit, moonRing, controls, scene, camera, renderer, scene;
+var controls, scene, camera, renderer, bgScene, bgMesh;
+var pointLight, sun, moon, satellite, earth, earthOrbit, moonRing;
 var planetSegments = 48;
 var moonRadius = 1738; // km
 var earthRadius = 6378.1366; // km
@@ -9,6 +10,7 @@ var earthData = constructPlanetData(365.2564, 0.015, earthSunDist / moonRadius, 
 var moonData = constructPlanetData(29.5, 0.01, earthMoonDist / moonRadius, "moon", "img/moon.jpg", 1.0, planetSegments);
 var orbitData = { value: 200, runOrbit: true, runRotation: true };
 var clock = new THREE.Clock();
+var beginOfTime = Date.now();
 
 /**
  * This eliminates the redundance of having to type property names for a planet object.
@@ -227,10 +229,14 @@ function moveSat(mySat, myPlanet, myData, myTime) {
  * @returns {undefined}
  */
 function update(renderer, scene, camera, controls) {
+    const time = Date.now();
+
+    bgMesh.material.uniforms.time.value = (time - beginOfTime) / 1000.0;
+    bgMesh.position.copy(camera.position);
+    renderer.render(bgScene, camera);
+
     pointLight.position.copy(sun.position);
     controls.update();
-
-    var time = Date.now();
 
     movePlanet(earth, earthData, time);
     moveSat(moon, earth, moonData, time);
@@ -240,6 +246,4 @@ function update(renderer, scene, camera, controls) {
     requestAnimationFrame(function () {
         update(renderer, scene, camera, controls);
     });
-
-    console.log(satellite.position)
 }

@@ -21,6 +21,7 @@ function init() {
     // Create the renderer that controls animation.
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.autoClearColor = false;
 
     // Attach the renderer to the div element.
     document.getElementById('webgl').appendChild(renderer.domElement);
@@ -29,7 +30,7 @@ function init() {
     controls = new THREE.OrbitControls(camera, renderer.domElement);
 
     // Load the images used in the background.
-    var path = 'cubemap/';
+    /*var path = 'cubemap/';
     var format = '.png';
     var urls = [
         path + 'px' + format, path + 'nx' + format,
@@ -40,7 +41,30 @@ function init() {
     reflectionCube.format = THREE.RGBFormat;
 
     // Attach the background cube to the scene.
-    scene.background = reflectionCube;
+    scene.background = reflectionCube;*/
+    bgScene = new THREE.Scene();
+    const vertShader = document.getElementById('vertexShader').innerHTML;
+    const fragShader = document.getElementById('fragmentShader').innerHTML;
+    const uniforms = {
+        time: {
+            type: 'f',
+            value: 0.0
+        },
+        bgtexture: {
+            type: 't',
+            value: new THREE.TextureLoader().load('./cubemap/sky.jpg')
+        }
+    };
+    const material = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        vertexShader: vertShader,
+        fragmentShader: fragShader,
+        depthWrite: false,
+        side: THREE.BackSide,
+    });
+    const plane = new THREE.BoxBufferGeometry(2, 2, 2);
+    bgMesh = new THREE.Mesh(plane, material)
+    bgScene.add(bgMesh)
 
     // Create light from the sun.
     pointLight = getPointLight(5, "rgb(255, 220, 180)");
