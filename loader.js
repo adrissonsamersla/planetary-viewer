@@ -15,6 +15,8 @@ const sceneBuilder = (modelName) => {
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
 
+    const controls = new THREE.OrbitControls(camera, domElem);
+
     const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.15);
     scene.add(ambientLight);
     const directionalLights = [
