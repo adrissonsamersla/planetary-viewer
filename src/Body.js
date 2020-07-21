@@ -23,6 +23,8 @@ class Body {
         );
         this.orbit.position.set(centralBody.position.x, centralBody.position.y, centralBody.position.z);
         scene.add(this.orbit);
+
+        this.name = bodyData.name;
     };
 
     move = (time, orbitData, stopRotation = false, stopOrbit = false) => {

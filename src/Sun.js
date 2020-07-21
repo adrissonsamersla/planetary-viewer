@@ -14,7 +14,7 @@ class Sun {
                 map: new THREE.ImageUtils.loadTexture("img/glow.png")
                 , useScreenCoordinates: false
                 , color: 0xffffee
-                , transparent: false
+                , transparent: true
                 , blending: THREE.AdditiveBlending
             });
         const solarGlowSprite = new THREE.Sprite(solarGlowMaterial);
@@ -34,7 +34,7 @@ class Sun {
     }
 
     set position(newPosition) {
-        this.body.position = newPosition;
+        this.sun.position.copy(newPosition);
     }
 }
 

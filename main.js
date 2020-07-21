@@ -1,9 +1,9 @@
 import { scene, bgScene, camera, renderer, controls } from './setup.js'
 import { getPointLight } from './src/utils.js';
-import { numSphereSegments, earthSunDist, earthMoonDist, earthRadius, moonRadius } from './src/constants.js';
 
-import Sun from './src/Sun.js';
-import Body from './src/Body.js';
+import SolarSystem from './src/SolarSystem.js';
+
+import { numSphereSegments, earthSunDist, earthMoonDist, earthRadius, moonRadius } from './src/constants.js';
 
 const beginOfTime = Date.now();
 const orbitData = { value: 200, runOrbit: true, runRotation: true };
@@ -35,46 +35,42 @@ const buildBackground = (bgScene) => {
     return bgMesh
 }
 
-const buildGUI = (pointLight) => {
+const buildGUI = (pointLight, solarSystem) => {
     // Create the GUI that displays controls.
     const gui = new dat.GUI();
 
-    const folder1 = gui.addFolder('light');
-    folder1.add(pointLight, 'intensity', 0, 10);
+    const lightFolder = gui.addFolder('light');
+    lightFolder.add(pointLight, 'intensity', 0, 10);
 
-    const folder2 = gui.addFolder('speed');
-    folder2.add(orbitData, 'value', 0, 600);
-    folder2.add(orbitData, 'runOrbit', 0, 1);
-    folder2.add(orbitData, 'runRotation', 0, 1);
+    const speedFolder = gui.addFolder('speed');
+    speedFolder.add(orbitData, 'value', 0, 600);
+    speedFolder.add(orbitData, 'runOrbit', 0, 1);
+    speedFolder.add(orbitData, 'runRotation', 0, 1);
 
-
-    const hubble = () => {
-        window.open("hubble.html");
-    }
-    const cassini = () => {
-        window.open("cassini.html");
-    }
-    const iss = function () {
-        window.open("iss.html");
-    }
-    const newHorizons = () => {
-        window.open("newHorizons.html");
-    }
-    const voyager = () => {
-        window.open("voyager.html");
-    }
-    const obj = {
-        'Hubble': hubble,
-        'Cassini': cassini,
-        'ISS': iss,
-        'NewHorizons': newHorizons,
-        'Voyager': voyager,
+    const spacecraftLinks = {
+        'Hubble': () => window.open("hubble.html"),
+        'Cassini': () => window.open("cassini.html"),
+        'ISS': () => window.open("iss.html"),
+        'New Horizons': () => window.open("newHorizons.html"),
+        'Voyager': () => window.open("voyager.html"),
     };
-    gui.add(obj, 'Hubble');
-    gui.add(obj, 'Cassini');
-    gui.add(obj, 'ISS');
-    gui.add(obj, 'NewHorizons');
-    gui.add(obj, 'Voyager');
+    const spacecraftFolder = gui.addFolder('spacecraft');
+    spacecraftFolder.add(spacecraftLinks, 'Hubble');
+    spacecraftFolder.add(spacecraftLinks, 'Cassini');
+    spacecraftFolder.add(spacecraftLinks, 'ISS');
+    spacecraftFolder.add(spacecraftLinks, 'New Horizons');
+    spacecraftFolder.add(spacecraftLinks, 'Voyager');
+
+    const planetsFolder = gui.addFolder('planets');
+    planetsFolder.closed = false;
+    const planetHandler = {
+        'Mercury': () => solarSystem.navigateTo('mercury'),
+        'Earth': () => solarSystem.navigateTo('earth'),
+        'Jupiter': () => solarSystem.navigateTo('jupiter'),
+    }
+    planetsFolder.add(planetHandler, 'Mercury');
+    planetsFolder.add(planetHandler, 'Earth');
+    planetsFolder.add(planetHandler, 'Jupiter');
 
     return gui;
 }
@@ -116,13 +112,9 @@ const main = () => {
 
     const [pointLight, _] = buildLights(scene);
 
-    const gui = buildGUI(pointLight);
+    const mouse = setMouse();
 
-    const solarRadius = 10 // Must be get from API
-    const sun = new Sun(scene, solarRadius)
-
-    // Create the Earth, the Moon, and a ring around the earth.
-    const earthData = {
+    const data = {
         orbitRate: 365.2564,
         rotationRate: 0.015,
         distanceFromAxis: earthSunDist / moonRadius,
@@ -130,54 +122,17 @@ const main = () => {
         texture: "img/earth.jpg",
         size: earthRadius / moonRadius,
         segments: numSphereSegments,
-    }
-    const moonData = {
-        orbitRate: 290.5,
-        rotationRate: 0.01,
-        distanceFromAxis: earthMoonDist / moonRadius,
-        name: "moon",
-        texture: "img/moon.jpg",
-        size: 1.0,
-        segments: numSphereSegments,
-    }
-    const mercuryData = {
-        orbitRate: 200.5,
-        rotationRate: 0.15,
-        distanceFromAxis: (earthSunDist / moonRadius) / 3,
-        name: "mercury",
-        texture: "img/earth.jpg",
-        size: (earthRadius / moonRadius) / 2,
-        segments: numSphereSegments,
-    }
-    const jupiterData = {
-        orbitRate: 3650.2564,
-        rotationRate: 0.015,
-        distanceFromAxis: (earthSunDist / moonRadius) * 3,
-        name: "jupiter",
-        texture: "img/earth.jpg",
-        size: (earthRadius / moonRadius) * 10,
-        segments: numSphereSegments,
-    }
+    }; // Get from api
+    const solarSystem = new SolarSystem(scene, camera, mouse, controls, data, orbitData);
 
-    setCameraPosition(camera, earthData.distanceFromAxis)
+    const gui = buildGUI(pointLight, solarSystem);
 
-    const raycaster = new THREE.Raycaster();
-    const mouse = setMouse();
+    setCameraPosition(camera, data.distanceFromAxis);
 
-    const earth = new Body(scene, sun, earthData);
-    const mercury = new Body(scene, sun, mercuryData);
-    const jupiter = new Body(scene, sun, jupiterData);
-    const moon = new Body(scene, earth, moonData);
-
-    //moonRing = getTube(earthMoonDist / moonRadius, 0.05, 480, 0xffffff, "ring", earthData.distanceFromAxis);
-
-    // Create the visible orbit that the Earth uses.
-    //createVisibleOrbits();
-
-    const planets = [earth, mercury, jupiter];
-    const moons = [moon];
     const update = () => {
         const time = Date.now() - beginOfTime;
+
+        solarSystem.update(time);
 
         // Twinkling the stars
         bgMesh.material.uniforms.time.value = time / 1000.0;
@@ -185,31 +140,22 @@ const main = () => {
         renderer.render(bgScene, camera);
 
         // Tracking the sun position
-        pointLight.position.copy(sun.position);
-        controls.update();
+        pointLight.position.copy(solarSystem.sun.position);
 
-        // Selected celestial bodies
-        // Not done yet
-        /*planets.forEach((planet) => planet.resize(1));
-        raycaster.setFromCamera(mouse, camera);
-        planets
-            .map((planet) => planet.body)
-            .filter((mesh) => {
-                console.log(raycaster.intersectObject(mesh).length);
-                return raycaster.intersectObject(mesh).length > 0;
-            })
-            .forEach((_, idx) => {
-                console.log(planets[idx])
-                planets[idx].resize(2)
-            });*/
-
-
-        // Moving the other bodies
-        planets.forEach((planet) => planet.move(time, orbitData));
-        moons.forEach((moon) => moon.move(time, orbitData));
+        solarSystem.update(time);
 
         renderer.render(scene, camera);
-        requestAnimationFrame(() => update());
+
+        const fps = 60;
+        const period = 1000 / fps;
+        requestAnimationFrame(() => {
+            const current = (Date.now() - beginOfTime) - time;
+            if (current >= period)
+                update()
+            else {
+                setTimeout(update, period - current);
+            }
+        });
     }
 
     // Start the animation.
