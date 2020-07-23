@@ -22,7 +22,7 @@ const getSphere = (material, size, segments = numSphereSegments) => {
  * @returns {THREE.PointLight|getPointLight.light}
  */
 const getPointLight = (intensity, color) => {
-    const light = new THREE.PointLight(color, intensity);
+    const light = new THREE.PointLight(color, intensity, 0, 2);
     light.castShadow = true;
 
     light.shadow.bias = 0.001;

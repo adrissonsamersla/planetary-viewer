@@ -14,7 +14,7 @@ const earthData = {
     segments: numSphereSegments,
 }
 const moonData = {
-    orbitRate: 290.5,
+    orbitRate: 29.5,
     rotationRate: 0.01,
     distanceFromAxis: earthMoonDist / moonRadius,
     name: "moon",
@@ -48,19 +48,23 @@ class SolarSystem {
     planetsNames = ['mercury', 'earth', 'jupiter'];
     moonsNames = ['moon'];
 
-    constructor(scene, camera, mouse, controls, data, orbitData) {
+    constructor(scene, camera, mouse, controls, data) {
         this.camera = camera;
         this.mouse = mouse
         this.controls = controls;
         this.raycaster = new THREE.Raycaster();
 
         this.data = data;
-        this.orbitData = orbitData;
+        this.orbitData = {
+            speedFactor: 0,
+            runOrbit: true,
+            runRotation: true
+        };
 
         this.navigation = {
             active: false,
             numTicks: 0,
-            totalTicks: 1000,
+            totalTicks: 500,
             to: null,
             initialPos: null,
             finalPos: null,
@@ -95,7 +99,7 @@ class SolarSystem {
                 this.controls.target.copy(this.navigation.to.position);
             }
 
-            this.camera.position.copy(this.navigation.spline.getPointAt(param))
+            this.camera.position.copy(this.navigation.spline.getPointAt(param));
 
 
             this.camera.lookAt(
@@ -136,7 +140,10 @@ class SolarSystem {
         this.navigation.to = this.planets.filter((planet) => planet.name === planetName)[0];
 
         this.navigation.initialPos = this.camera.position.clone();
-        this.navigation.finalPos = this.navigation.to.position.clone().add(new THREE.Vector3(100, 100, 100));
+
+        this.navigation.finalPos = this.navigation.to.position.clone().add(
+            new THREE.Vector3(1, 1, 1).setLength(5 * this.navigation.to.radius)
+        );
 
 
         this.navigation.initialOrientation = this.camera.getWorldDirection().clone();
@@ -153,7 +160,10 @@ class SolarSystem {
             if (e.key === 'Escape' || e.key === 'Esc' || e.keyCode === 27) {
                 if (this.navigation.active) {
                     this.camera.position.copy(this.navigation.finalPos);
-                    this.camera.up.copy(this.navigation.finalOrientation);
+                    this.camera.lookAt(
+                        this.sun.position
+                    );
+                    this.navigation.active = false;
                 }
                 this.freeMode = true;
                 this.controls.target.copy(this.sun.position);

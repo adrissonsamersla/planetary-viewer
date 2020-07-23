@@ -27,14 +27,17 @@ class Body {
         this.name = bodyData.name;
     };
 
-    move = (time, orbitData, stopRotation = false, stopOrbit = false) => {
+    move = (time, orbitData) => {
+        const stopRotation = !orbitData.runRotation;
+        const stopOrbit = !orbitData.runOrbit;
+
         if (!stopRotation) {
             this.body.rotation.y += this.data.rotationRate;
         }
         if (!stopOrbit) {
             this.distVector.applyAxisAngle(
                 new THREE.Vector3(0, 1, 0),
-                time * 1.0 / (this.data.orbitRate * orbitData.value * 50)
+                time * Math.pow(2, orbitData.speedFactor) / (this.data.orbitRate * 1000)
             );
 
             this.orbit.position.set(
@@ -48,20 +51,19 @@ class Body {
                 this.centralBody.position.y + this.distVector.y,
                 this.centralBody.position.z + this.distVector.z,
             )
-            /*this.group.position.x = Math.cos(time * 1.0 / (this.data.orbitRate * orbitData.value))
-                * this.data.distanceFromAxis;
-            this.group.position.z = Math.sin(time * 1.0 / (this.data.orbitRate * orbitData.value))
-                * this.data.distanceFromAxis;*/
         }
     }
 
     resize = (resizeFactor) => {
-        const newSize = resizeFactor * this.data.size;
-        this.body.scale.set(newSize, newSize, newSize);
+        this.body.scale.set(resizeFactor, resizeFactor, resizeFactor);
     }
 
     get position() {
         return this.body.position;
+    }
+
+    get radius() {
+        return this.data.size
     }
 }
 
