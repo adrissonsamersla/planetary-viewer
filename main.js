@@ -49,7 +49,7 @@ const buildGUI = (pointLight, backgroundLight, solarSystem) => {
   lightFolder.add(backgroundLight, "intensity", 0, 1, 0.1);
 
   const speedFolder = gui.addFolder("movement");
-  speedFolder.add(solarSystem.orbitData, "speedFactor", -3, 3, 0.1);
+  speedFolder.add(solarSystem.orbitData, "speedFactor", -3, 3, 0.01);
   speedFolder.add(solarSystem.orbitData, "runOrbit");
   speedFolder.add(solarSystem.orbitData, "runRotation");
 
@@ -93,9 +93,9 @@ const buildLights = (scene) => {
   return [pointLight, ambientLight];
 };
 
-const setCameraPosition = (camera, earthOrbitDistance) => {
+const setCameraPosition = (camera, cameraDistance) => {
   camera.position.z = 50;
-  camera.position.x = 1.2 * earthOrbitDistance;
+  camera.position.x = 1.2 * cameraDistance;
   camera.position.y = 100;
   camera.lookAt(new THREE.Vector3(0, 0, 0));
 };
@@ -112,34 +112,51 @@ const setMouse = () => {
   return mouse;
 };
 
-const main = () => {
+const getDataFromApi = async (bodyName) => {
+  const promise = fetch(
+    "https://api.le-systeme-solaire.net/rest/bodies?filter[]=englishName,eq," +
+    bodyName +
+    "&data=meanRadius,mass,massValue,massExponent,gravity,escape,sideralOrbit,sideralRotation,moons,aphelion,perihelion"
+  );
+
+  const response = await promise;
+
+  return {
+    "name": bodyName,
+    "data": await response.json()
+  }
+}
+
+const main = async () => {
   const bgMesh = buildBackground(bgScene);
 
-  const [pointLight, _] = buildLights(scene);
+  const [pointLight, backgroundLight] = buildLights(scene);
 
   const mouse = setMouse();
 
-  const data = {
-    orbitRate: 365.2564,
-    rotationRate: 0.015,
-    distanceFromAxis: earthSunDist / moonRadius,
-    name: "earth",
-    texture: "img/earth.jpg",
-    size: earthRadius / moonRadius,
-    segments: numSphereSegments,
-  }; // Get from api
-  const solarSystem = new SolarSystem(
-    scene,
-    camera,
-    mouse,
-    controls,
-    data,
-    orbitData
-  );
+  const names = [
+    "mercury",
+    "venus",
+    "earth",
+    "mars",
+    "jupiter",
+    "pluto",
+    "uranus",
+    "neptune",
+    "saturn",
+  ];
+  const promises = names.map(name => getDataFromApi(name));
+  const rawData = await Promise.all(promises);
+  const data = rawData.map((payload) => {
+    const planetData = new PlanetDataFromAPI(payload.name);
+    planetData.inicia(payload.data.bodies[0]);
+    return planetData;
+  });
+  const solarSystem = new SolarSystem(scene, camera, mouse, controls, data);
 
-  const gui = buildGUI(pointLight, solarSystem);
+  const gui = buildGUI(pointLight, backgroundLight, solarSystem);
 
-  setCameraPosition(camera, data.distanceFromAxis);
+  setCameraPosition(camera, solarSystem.cameraInitialDistance());
 
   const update = () => {
     const time = Date.now() - beginOfTime;
@@ -164,57 +181,6 @@ const main = () => {
       const current = Date.now() - beginOfTime - time;
       if (current >= period) update();
       else {
-        setTimeout(update, period - current);
-      }
-    });
-  };
-
-  const bgMesh = buildBackground(bgScene);
-
-  const [pointLight, backgroundLight] = buildLights(scene);
-
-  const mouse = setMouse();
-
-  const data = {
-    orbitRate: 365.2564,
-    rotationRate: 0.015,
-    distanceFromAxis: earthSunDist / moonRadius,
-    name: "earth",
-    texture: "img/earth.jpg",
-    size: earthRadius / moonRadius,
-    segments: numSphereSegments,
-  }; // Get from api
-  const solarSystem = new SolarSystem(scene, camera, mouse, controls, data);
-
-  const gui = buildGUI(pointLight, backgroundLight, solarSystem);
-
-  setCameraPosition(camera, data.distanceFromAxis);
-
-  const fps = 30;
-  const period = 1000 / fps;
-  const update = () => {
-    const time = Date.now() - beginOfTime;
-
-    solarSystem.update(time);
-
-    // Twinkling the stars
-    bgMesh.material.uniforms.time.value = time / 1000.0;
-    bgMesh.position.copy(camera.position);
-    renderer.render(bgScene, camera);
-
-    // Tracking the sun position
-    pointLight.position.copy(solarSystem.sun.position);
-
-    solarSystem.update(period);
-
-    renderer.render(scene, camera);
-
-    requestAnimationFrame(() => {
-      const current = Date.now() - beginOfTime - time;
-      if (current >= period) {
-        console.log(`Couldnt keep ${fps}fps`);
-        update();
-      } else {
         setTimeout(update, period - current);
       }
     });

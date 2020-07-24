@@ -85,7 +85,7 @@ let PlanetsDataList = [];
     return;
   }
   let planet = PlanetsList[i];
-  PlanetsDataList[planet] = new PlanetDataFromAPI(planet);
+  PlanetsDataList[i] = new PlanetDataFromAPI(planet);
   // Ajustes para contato com API
   let raw_data;
   xmlhttp.open("GET", req_url(planet));
@@ -93,7 +93,7 @@ let PlanetsDataList = [];
     if (this.readyState == 4 && this.status == 200) {
       let PlanetsDataJSON = this.response;
       raw_data = PlanetsDataJSON.bodies[0];
-      PlanetsDataList[planet].inicia(raw_data);
+      PlanetsDataList[i].inicia(raw_data);
       loop(i + 1, length);
     }
   };
@@ -101,22 +101,22 @@ let PlanetsDataList = [];
   xmlhttp.send();
 })(0, PlanetsList.length);
 
-// function request_bodies_data(body_name) {
-//   return fetch(
-//     "https://api.le-systeme-solaire.net/rest/bodies?filter[]=englishName,eq," +
-//       body_name +
-//       "&data=meanRadius,mass,massValue,massExponent,gravity,escape,sideralOrbit,sideralRotation,moons"
-//   )
-//     .then((res) => {
-//       if (res.ok) {
-//         console.log("SUCCESS");
-//       } else {
-//         console.log("Not Successful");
-//       }
-//       return res.json();
-//     })
-//     .then((body_data) => {
-//       return body_data;
-//     })
-//     .catch((error) => console.log("ERROR"));
-// }
+function request_bodies_data(body_name) {
+  return fetch(
+    "https://api.le-systeme-solaire.net/rest/bodies?filter[]=englishName,eq," +
+    body_name +
+    "&data=meanRadius,mass,massValue,massExponent,gravity,escape,sideralOrbit,sideralRotation,moons"
+  )
+    .then((res) => {
+      if (res.ok) {
+        console.log("SUCCESS");
+      } else {
+        console.log("Not Successful");
+      }
+      return res.json();
+    })
+    .then((body_data) => {
+      return body_data;
+    })
+    .catch((error) => console.log("ERROR"));
+}

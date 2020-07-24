@@ -32,12 +32,12 @@ class Body {
         const stopOrbit = !orbitData.runOrbit;
 
         if (!stopRotation) {
-            this.body.rotation.y += this.data.rotationRate;
+            this.body.rotation.y = time * Math.pow(10, orbitData.speedFactor) * this.data.rotationRate;
         }
         if (!stopOrbit) {
             this.distVector.applyAxisAngle(
                 new THREE.Vector3(0, 1, 0),
-                time * Math.pow(2, orbitData.speedFactor) / (this.data.orbitRate * 1000)
+                time * Math.pow(10, orbitData.speedFactor) * this.data.orbitRate
             );
 
             this.orbit.position.set(
