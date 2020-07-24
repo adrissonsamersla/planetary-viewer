@@ -38,11 +38,11 @@ const buildGUI = (pointLight, backgroundLight, solarSystem) => {
     // Create the GUI that displays controls.
     const gui = new dat.GUI();
 
-    const lightFolder = gui.addFolder('luminosity');
+    const lightFolder = gui.addFolder('Luminosity');
     lightFolder.add(pointLight, 'intensity', 0, 1, 0.1);
     lightFolder.add(backgroundLight, 'intensity', 0, 1, 0.1);
 
-    const speedFolder = gui.addFolder('movement');
+    const speedFolder = gui.addFolder('Movement');
     speedFolder.add(solarSystem.orbitData, 'speedFactor', -3, 3, 0.1);
     speedFolder.add(solarSystem.orbitData, 'runOrbit');
     speedFolder.add(solarSystem.orbitData, 'runRotation');
@@ -54,14 +54,14 @@ const buildGUI = (pointLight, backgroundLight, solarSystem) => {
         'New Horizons': () => window.open("newHorizons.html"),
         'Voyager': () => window.open("voyager.html"),
     };
-    const spacecraftFolder = gui.addFolder('spacecraft');
+    const spacecraftFolder = gui.addFolder('Spacecraft');
     spacecraftFolder.add(spacecraftLinks, 'Hubble');
     spacecraftFolder.add(spacecraftLinks, 'Cassini');
     spacecraftFolder.add(spacecraftLinks, 'ISS');
     spacecraftFolder.add(spacecraftLinks, 'New Horizons');
     spacecraftFolder.add(spacecraftLinks, 'Voyager');
 
-    const planetsFolder = gui.addFolder('planets');
+    const planetsFolder = gui.addFolder('Planets');
     planetsFolder.closed = false;
     const planetHandler = {
         'Mercury': () => solarSystem.navigateTo('mercury'),
