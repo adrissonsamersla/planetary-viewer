@@ -89,18 +89,18 @@ const sceneBuilder = (modelName) => {
         [-1, 1, 0],
         [0, 1, 1],
 
-        [1, 0, 0],
-        [0, 0, -1],
-        [-1, 0, 0],
-        [0, 0, 1],
+    [1, 0, 0],
+    [0, 0, -1],
+    [-1, 0, 0],
+    [0, 0, 1],
 
-        [1, -1, 0],
-        [0, -1, -1],
-        [-1, -1, 0],
-        [0, -1, 1]
-    ]
-    directionalLights.forEach((dl) => {
-        const light = new THREE.DirectionalLight(0xFFFFFF, 0.35);
+    [1, -1, 0],
+    [0, -1, -1],
+    [-1, -1, 0],
+    [0, -1, 1],
+  ];
+  directionalLights.forEach((dl) => {
+    const light = new THREE.DirectionalLight(0xffffff, 0.35);
 
         light.position.set(10 * dl[0], 10 * dl[1], 10 * dl[2]);
         light.lookAt(new THREE.Vector3(0, 0, 0));
@@ -194,8 +194,8 @@ const sceneBuilder = (modelName) => {
         
     }
 
-    animate();
-}
+  animate();
+};
 
 const modelLoader = (modelName, scene) => {
     const loader = new THREE.GLTFLoader();

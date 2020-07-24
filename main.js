@@ -1,38 +1,44 @@
-import { scene, bgScene, camera, renderer, controls } from './setup.js'
-import { getPointLight } from './src/utils.js';
+import { scene, bgScene, camera, renderer, controls } from "./setup.js";
+import { getPointLight } from "./src/utils.js";
 
-import SolarSystem from './src/SolarSystem.js';
+import SolarSystem from "./src/SolarSystem.js";
 
-import { numSphereSegments, earthSunDist, earthMoonDist, earthRadius, moonRadius } from './src/constants.js';
+import {
+  numSphereSegments,
+  earthSunDist,
+  earthMoonDist,
+  earthRadius,
+  moonRadius,
+} from "./src/constants.js";
 
 const beginOfTime = Date.now();
 
 const buildBackground = (bgScene) => {
-    const vertShader = document.getElementById('vertexShader').innerHTML;
-    const fragShader = document.getElementById('fragmentShader').innerHTML;
-    const uniforms = {
-        time: {
-            type: 'f',
-            value: 0.0
-        },
-        bgtexture: {
-            type: 't',
-            value: new THREE.TextureLoader().load('./cubemap/sky.jpg')
-        }
-    };
-    const material = new THREE.ShaderMaterial({
-        uniforms: uniforms,
-        vertexShader: vertShader,
-        fragmentShader: fragShader,
-        depthWrite: false,
-        side: THREE.BackSide,
-    });
-    const plane = new THREE.BoxBufferGeometry(2, 2, 2);
-    const bgMesh = new THREE.Mesh(plane, material)
-    bgScene.add(bgMesh)
+  const vertShader = document.getElementById("vertexShader").innerHTML;
+  const fragShader = document.getElementById("fragmentShader").innerHTML;
+  const uniforms = {
+    time: {
+      type: "f",
+      value: 0.0,
+    },
+    bgtexture: {
+      type: "t",
+      value: new THREE.TextureLoader().load("./cubemap/sky.jpg"),
+    },
+  };
+  const material = new THREE.ShaderMaterial({
+    uniforms: uniforms,
+    vertexShader: vertShader,
+    fragmentShader: fragShader,
+    depthWrite: false,
+    side: THREE.BackSide,
+  });
+  const plane = new THREE.BoxBufferGeometry(2, 2, 2);
+  const bgMesh = new THREE.Mesh(plane, material);
+  bgScene.add(bgMesh);
 
-    return bgMesh
-}
+  return bgMesh;
+};
 
 const buildGUI = (pointLight, backgroundLight, solarSystem) => {
     // Create the GUI that displays controls.
@@ -76,92 +82,112 @@ const buildGUI = (pointLight, backgroundLight, solarSystem) => {
 }
 
 const buildLights = (scene) => {
-    // Create light from the sun.
-    const pointLight = getPointLight(1, "rgb(255, 220, 180)");
-    scene.add(pointLight);
+  // Create light from the sun.
+  const pointLight = getPointLight(1, "rgb(255, 220, 180)");
+  scene.add(pointLight);
 
-    // Create light that is viewable from all directions.
-    const ambientLight = new THREE.AmbientLight(0xaaaaaa, 0.5);
-    scene.add(ambientLight);
+  // Create light that is viewable from all directions.
+  const ambientLight = new THREE.AmbientLight(0xaaaaaa, 0.5);
+  scene.add(ambientLight);
 
-    return [pointLight, ambientLight]
-}
+  return [pointLight, ambientLight];
+};
 
-const setCameraPosition = (camera, earthOrbitDistance) => {
-    camera.position.z = 50;
-    camera.position.x = 1.2 * earthOrbitDistance;
-    camera.position.y = 100;
-    camera.lookAt(new THREE.Vector3(0, 0, 0));
-}
+const setCameraPosition = (camera, cameraDistance) => {
+  camera.position.z = 50;
+  camera.position.x = 1.2 * cameraDistance;
+  camera.position.y = 100;
+  camera.lookAt(new THREE.Vector3(0, 0, 0));
+};
 
 const setMouse = () => {
-    const mouse = new THREE.Vector2();
+  const mouse = new THREE.Vector2();
 
-    const handler = (event) => {
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
-    }
-    window.addEventListener('mousemove', handler, false);
+  const handler = (event) => {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  };
+  window.addEventListener("mousemove", handler, false);
 
-    return mouse;
+  return mouse;
+};
+
+const getDataFromApi = async (bodyName) => {
+  const promise = fetch(
+    "https://api.le-systeme-solaire.net/rest/bodies?filter[]=englishName,eq," +
+    bodyName +
+    "&data=meanRadius,mass,massValue,massExponent,gravity,escape,sideralOrbit,sideralRotation,moons,aphelion,perihelion"
+  );
+
+  const response = await promise;
+
+  return {
+    "name": bodyName,
+    "data": await response.json()
+  }
 }
 
-const main = () => {
+const main = async () => {
+  const bgMesh = buildBackground(bgScene);
 
-    const bgMesh = buildBackground(bgScene);
+  const [pointLight, backgroundLight] = buildLights(scene);
 
-    const [pointLight, backgroundLight] = buildLights(scene);
+  const mouse = setMouse();
 
-    const mouse = setMouse();
+  const names = [
+    "mercury",
+    "venus",
+    "earth",
+    "mars",
+    "jupiter",
+    "pluto",
+    "uranus",
+    "neptune",
+    "saturn",
+  ];
+  const promises = names.map(name => getDataFromApi(name));
+  const rawData = await Promise.all(promises);
+  const data = rawData.map((payload) => {
+    const planetData = new PlanetDataFromAPI(payload.name);
+    planetData.inicia(payload.data.bodies[0]);
+    return planetData;
+  });
+  const solarSystem = new SolarSystem(scene, camera, mouse, controls, data);
 
-    const data = {
-        orbitRate: 365.2564,
-        rotationRate: 0.015,
-        distanceFromAxis: earthSunDist / moonRadius,
-        name: "earth",
-        texture: "img/earth.jpg",
-        size: earthRadius / moonRadius,
-        segments: numSphereSegments,
-    }; // Get from api
-    const solarSystem = new SolarSystem(scene, camera, mouse, controls, data);
+  const gui = buildGUI(pointLight, backgroundLight, solarSystem);
 
-    const gui = buildGUI(pointLight, backgroundLight, solarSystem);
+  setCameraPosition(camera, solarSystem.cameraInitialDistance());
 
-    setCameraPosition(camera, data.distanceFromAxis);
+  const update = () => {
+    const time = Date.now() - beginOfTime;
 
-    const fps = 30;
+    solarSystem.update(time);
+
+    // Twinkling the stars
+    bgMesh.material.uniforms.time.value = time / 1000.0;
+    bgMesh.position.copy(camera.position);
+    renderer.render(bgScene, camera);
+
+    // Tracking the sun position
+    pointLight.position.copy(solarSystem.sun.position);
+
+    solarSystem.update(time);
+
+    renderer.render(scene, camera);
+
+    const fps = 60;
     const period = 1000 / fps;
-    const update = () => {
-        const time = Date.now() - beginOfTime;
+    requestAnimationFrame(() => {
+      const current = Date.now() - beginOfTime - time;
+      if (current >= period) update();
+      else {
+        setTimeout(update, period - current);
+      }
+    });
+  };
 
-        solarSystem.update(time);
-
-        // Twinkling the stars
-        bgMesh.material.uniforms.time.value = time / 1000.0;
-        bgMesh.position.copy(camera.position);
-        renderer.render(bgScene, camera);
-
-        // Tracking the sun position
-        pointLight.position.copy(solarSystem.sun.position);
-
-        solarSystem.update(period);
-
-        renderer.render(scene, camera);
-
-        requestAnimationFrame(() => {
-            const current = (Date.now() - beginOfTime) - time;
-            if (current >= period) {
-                console.log(`Couldnt keep ${fps}fps`);
-                update();
-            }
-            else {
-                setTimeout(update, period - current);
-            }
-        });
-    }
-
-    // Start the animation.
-    update();
-}
+  // Start the animation.
+  update();
+};
 
 export default main;

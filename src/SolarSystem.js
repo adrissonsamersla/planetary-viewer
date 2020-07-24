@@ -1,51 +1,33 @@
 import Sun from './Sun.js';
 import Body from './Body.js';
 
-import { numSphereSegments, earthSunDist, earthMoonDist, earthRadius, moonRadius } from './constants.js';
+import { earthMoonDist, moonRadius, numSphereSegments } from './constants.js';
 
-
-const earthData = {
-    orbitRate: 365.2564,
-    rotationRate: 0.015,
-    distanceFromAxis: earthSunDist / moonRadius,
-    name: "earth",
-    texture: "img/earth.jpg",
-    size: earthRadius / moonRadius,
-    segments: numSphereSegments,
-}
+// Radius of the Sun: 696342 Km
+const solarRadius = 696342 / (15 * moonRadius);
 const moonData = {
-    orbitRate: 29.5,
-    rotationRate: 0.01,
-    distanceFromAxis: earthMoonDist / moonRadius,
+    orbitRate: (2 * Math.PI) / (23.9345 * 10000),
+    rotationRate: (2 * Math.PI) / (23.9345 * 100),
+    distanceFromAxis: earthMoonDist / (20 * moonRadius),
     name: "moon",
     texture: "img/moon.jpg",
     size: 1.0,
     segments: numSphereSegments,
-}
-const mercuryData = {
-    orbitRate: 200.5,
-    rotationRate: 0.15,
-    distanceFromAxis: (earthSunDist / moonRadius) / 3,
-    name: "mercury",
-    texture: "img/mercury.jpg",
-    size: (earthRadius / moonRadius) / 2,
-    segments: numSphereSegments,
-}
-const jupiterData = {
-    orbitRate: 3650.2564,
-    rotationRate: 0.015,
-    distanceFromAxis: (earthSunDist / moonRadius) * 3,
-    name: "jupiter",
-    texture: "img/jupiter.jpg",
-    size: (earthRadius / moonRadius) * 5,
-    segments: numSphereSegments,
-}
+};
 
-const solarRadius = 50 // Must be get from API
+const dataParser = (data) => {
+    return {
+        orbitRate: (2 * Math.PI) / (data.periodo_translacao * 10000),
+        rotationRate: (2 * Math.PI) / (data.periodo_rotacao * 100),
+        distanceFromAxis: data.dist_media_sol / (1000 * moonRadius),
+        name: data.name,
+        texture: `img/${data.name}.jpg`,
+        size: data.raio_medio / moonRadius,
+        segments: numSphereSegments,
+    }
+}
 
 class SolarSystem {
-    //planets = ['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'];
-    planetsNames = ['mercury', 'earth', 'jupiter'];
     moonsNames = ['moon'];
 
     constructor(scene, camera, mouse, controls, data) {
@@ -76,12 +58,27 @@ class SolarSystem {
 
         this.sun = new Sun(scene, solarRadius)
 
-        const earth = new Body(scene, this.sun, earthData);
-        const mercury = new Body(scene, this.sun, mercuryData);
-        const jupiter = new Body(scene, this.sun, jupiterData);
+        // const earth = new Body(scene, this.sun, earthData);
+        // const mercury = new Body(scene, this.sun, mercuryData);
+        // const jupiter = new Body(scene, this.sun, jupiterData);
+        // const moon = new Body(scene, earth, moonData);
+
+        // this.planets = [earth, mercury, jupiter]
+
+        /*this.planets = this.planetsNames.map((planetName) => {
+            console.log(planetName)
+            console.log(PlanetsDataList)
+            console.log(PlanetsDataList[planetName])
+            const data = dataParser(PlanetsDataList[planetName])
+            console.log(data)
+            return new Body(scene, this.sun, data);
+        });*/
+        console.log(data)
+        this.planets = data.map((planetData) => new Body(scene, this.sun, dataParser(planetData)));
+
+        const earth = this.planets.find((p) => p.name === 'earth');
         const moon = new Body(scene, earth, moonData);
 
-        this.planets = [earth, mercury, jupiter]
         this.moons = [moon];
 
         this.addEscapeListener();
@@ -137,7 +134,7 @@ class SolarSystem {
         this.freeMode = false;
         this.navigation.numTicks = 1;
 
-        this.navigation.to = this.planets.filter((planet) => planet.name === planetName)[0];
+        this.navigation.to = this.planets.find((planet) => planet.name === planetName);
 
         this.navigation.initialPos = this.camera.position.clone();
 
@@ -169,6 +166,12 @@ class SolarSystem {
                 this.controls.target.copy(this.sun.position);
             }
         })
+    }
+
+    cameraInitialDistance = () => {
+        return this.planets
+            .map((planet) => planet.position.length())
+            .reduce((prev, curr) => curr > prev ? curr : prev, 100);
     }
 }
 
