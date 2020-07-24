@@ -23,10 +23,38 @@
 <body>
     <canvas id="mycanvas"></canvas>
 
+    <div id="webgl"></div>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
     <script type="text/javascript" src="https://threejs.org/build/three.js"></script>
     <script type="text/javascript" src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
     <script type="text/javascript" src="https://threejs.org/examples/js/loaders/GLTFLoader.js"></script>
+    <script id="vertexShader" type="x-shader/x-vertex">
+        varying float intensity;
+        varying vec2 texturecoords;
 
+        void main() {
+            gl_Position =   projectionMatrix * 
+                            modelViewMatrix * 
+                            vec4(position,1.0);
+            texturecoords = uv.xy;
+        }
+    </script>
+
+    <script id="fragmentShader" type="x-shader/x-fragment">
+        uniform sampler2D bgtexture;
+        uniform float time;
+
+        varying float intensity;
+        varying vec2 texturecoords;
+    
+        void main() {
+            gl_FragColor = vec4(
+                (0.3 + abs(sin(time) * 0.7)) * texture2D(bgtexture, texturecoords).rgb, 
+                1.
+            );
+        }
+    </script>
+    <script src="./helpers.js"></script>
     <script src="./loader.js"></script>
     <script>
         sceneBuilder('ISS_stationary.glb')
