@@ -6,8 +6,8 @@ import { earthMoonDist, moonRadius, numSphereSegments } from './constants.js';
 // Radius of the Sun: 696342 Km
 const solarRadius = 696342 / (15 * moonRadius);
 const moonData = {
-    orbitRate: (2 * Math.PI) / (23.9345 * 10000),
-    rotationRate: (2 * Math.PI) / (23.9345 * 100),
+    orbitRate: (2 * Math.PI) / (23.9345 * 5),
+    rotationRate: (2 * Math.PI) / (23.9345 * 5),
     distanceFromAxis: earthMoonDist / (20 * moonRadius),
     name: "moon",
     texture: "img/moon.jpg",
@@ -17,8 +17,8 @@ const moonData = {
 
 const dataParser = (data) => {
     return {
-        orbitRate: (2 * Math.PI) / (data.periodo_translacao * 10000),
-        rotationRate: (2 * Math.PI) / (data.periodo_rotacao * 100),
+        orbitRate: (2 * Math.PI) / (data.periodo_translacao * 5),
+        rotationRate: (2 * Math.PI) / (data.periodo_rotacao * 5),
         distanceFromAxis: data.dist_media_sol / (1000 * moonRadius),
         name: data.name,
         texture: `img/${data.name}.jpg`,
