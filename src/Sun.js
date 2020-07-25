@@ -3,7 +3,7 @@ import { getSphere, getMaterial } from './utils.js';
 class Sun {
     constructor(scene, radius) {
         // Create the sun.
-        const sunTexture = new THREE.TextureLoader().load('img/sun.jpg');
+        const sunTexture = new THREE.ImageUtils.loadTexture('img/sun.jpg');
         const sunMaterial = getMaterial("basic", "rgb(255, 255, 255)", sunTexture);
         this.sun = getSphere(sunMaterial, radius);
         scene.add(this.sun);
