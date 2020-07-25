@@ -10,7 +10,9 @@ class Body {
 
         const angle = Math.random() * 2 * Math.PI;
         this.body.position
-            .set(bodyData.distanceFromAxis, 0, 0).add(centralBody.position).applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
+            .set(bodyData.distanceFromAxis, 0, 0)
+            .applyAxisAngle(new THREE.Vector3(0, 1, 0), angle)
+            .add(centralBody.position);
         scene.add(this.body);
 
         this.distVector = this.body.position.clone()
