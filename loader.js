@@ -127,9 +127,10 @@ const sceneBuilder = (modelName) => {
         window.open("/")
     }
     var folder2 = gui.addFolder('Simulation');
-    folder2.add(orbitData, 'value', 20000, 50000, 0.1);
-    folder2.add(orbitData, 'runOrbit', 0, 1);
-    folder2.add(orbitData, 'runRotation', 0, 1);
+    folder2.open();
+    folder2.add(orbitData, 'value', 20000, 50000, 0.1).name('Period Factor');
+    folder2.add(orbitData, 'runOrbit', 0, 1).name('Run Orbit?');
+    folder2.add(orbitData, 'runRotation', 0, 1).name('Run Rotation?');
     gui.add(obj, 'SolarSystem').name('Solar System');
     var folder = gui.addFolder('Spacecraft');
     folder.open();
