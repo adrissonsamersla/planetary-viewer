@@ -45,13 +45,13 @@ const buildGUI = (pointLight, backgroundLight, solarSystem) => {
   const gui = new dat.GUI();
 
   const lightFolder = gui.addFolder("luminosity");
-  lightFolder.add(pointLight, "intensity", 0, 1, 0.1);
-  lightFolder.add(backgroundLight, "intensity", 0, 1, 0.1);
+  lightFolder.add(pointLight, "intensity", 0, 1, 0.1).name('Sunlight');
+  lightFolder.add(backgroundLight, "intensity", 0, 1, 0.1).name('Background');
 
   const speedFolder = gui.addFolder("movement");
-  speedFolder.add(solarSystem.orbitData, "speedFactor", -3, 3, 0.01);
-  speedFolder.add(solarSystem.orbitData, "runOrbit");
-  speedFolder.add(solarSystem.orbitData, "runRotation");
+  speedFolder.add(solarSystem.orbitData, "speedFactor", -3, 3, 0.01).name('Speed Factor');
+  speedFolder.add(solarSystem.orbitData, "runOrbit").name('Run Orbit?');
+  speedFolder.add(solarSystem.orbitData, "runRotation").name('Run Rotation?');
 
   const spacecraftLinks = {
     Hubble: () => window.open("hubble.html"),
@@ -71,12 +71,22 @@ const buildGUI = (pointLight, backgroundLight, solarSystem) => {
   planetsFolder.closed = false;
   const planetHandler = {
     Mercury: () => solarSystem.navigateTo("mercury"),
+    Venus: () => solarSystem.navigateTo("venus"),
     Earth: () => solarSystem.navigateTo("earth"),
+    Mars: () => solarSystem.navigateTo("mars"),
     Jupiter: () => solarSystem.navigateTo("jupiter"),
+    Saturn: () => solarSystem.navigateTo("saturn"),
+    Uranus: () => solarSystem.navigateTo("uranus"),
+    Neptune: () => solarSystem.navigateTo("neptune"),
   };
   planetsFolder.add(planetHandler, "Mercury");
+  planetsFolder.add(planetHandler, "Venus");
   planetsFolder.add(planetHandler, "Earth");
+  planetsFolder.add(planetHandler, "Mars");
   planetsFolder.add(planetHandler, "Jupiter");
+  planetsFolder.add(planetHandler, "Saturn");
+  planetsFolder.add(planetHandler, "Uranus");
+  planetsFolder.add(planetHandler, "Neptune");
 
   return gui;
 };
@@ -134,18 +144,7 @@ const main = async () => {
 
   const mouse = setMouse();
 
-  const names = [
-    "mercury",
-    "venus",
-    "earth",
-    "mars",
-    "jupiter",
-    "pluto",
-    "uranus",
-    "neptune",
-    "saturn",
-  ];
-  const promises = names.map(name => getDataFromApi(name));
+  const promises = SolarSystem.planetsNames.map(name => getDataFromApi(name));
   const rawData = await Promise.all(promises);
   const data = rawData.map((payload) => {
     const planetData = new PlanetDataFromAPI(payload.name);

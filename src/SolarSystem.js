@@ -28,6 +28,9 @@ const dataParser = (data) => {
 }
 
 class SolarSystem {
+    static planetsNames = ["mercury", "venus", "earth", "mars",
+        "jupiter", "saturn", "uranus", "neptune",
+    ];
     moonsNames = ['moon'];
 
     constructor(scene, camera, mouse, controls, data) {
