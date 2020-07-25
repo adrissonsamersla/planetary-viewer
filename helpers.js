@@ -149,7 +149,7 @@ function loadTexturedPlanet(myData, x, y, z, myMaterialType) {
     var passThisTexture;
 
     if (myData.texture && myData.texture !== "") {
-        passThisTexture = new THREE.ImageUtils.loadTexture(myData.texture);
+        passThisTexture = new THREE.TextureLoader().load(myData.texture);
     }
     if (myMaterialType) {
         myMaterial = getMaterial(myMaterialType, "rgb(255, 255, 255 )", passThisTexture);
@@ -157,6 +157,7 @@ function loadTexturedPlanet(myData, x, y, z, myMaterialType) {
         myMaterial = getMaterial("lambert", "rgb(255, 255, 255 )", passThisTexture);
     }
 
+    myMaterial.map.minFilter = THREE.LinearFilter;
     myMaterial.receiveShadow = true;
     myMaterial.castShadow = true;
     var myPlanet = getSphere(myMaterial, myData.size, myData.segments);
@@ -185,35 +186,35 @@ function getPointLight(intensity, color) {
 }
 
 /**
- * Move the planet around its orbit, and rotate it.
- * @param {type} myPlanet
+ * Move the object around its orbit, and rotate it.
+ * @param {type} myObject
  * @param {type} myData
  * @param {type} myTime
  * @param {type} stopRotation optional set to true for rings
  * @returns {undefined}
  */
-function movePlanet(myPlanet, myData, myTime, stopRotation) {
-    if (orbitData.runRotation && !stopRotation) {
-        myPlanet.rotation.y += myData.rotationRate;
+function movePlanet(myObject, myData, myTime, stopRotation, op="all") {
+    if ((op == "all" || op == "rot") &&  orbitData.runRotation && !stopRotation) {
+        myObject.rotation.y -= myData.rotationRate;
     }
-    if (orbitData.runOrbit) {
-        myPlanet.position.x = Math.cos(myTime * 1.0 / (myData.orbitRate * orbitData.value))
+    if ((op == "all" || op == "trans" || op == "sat") && orbitData.runOrbit) {
+        myObject.position.x = Math.cos(myTime * 1.0 / (myData.orbitRate * orbitData.value))
             * myData.distanceFromAxis;
-        myPlanet.position.z = Math.sin(myTime * 1.0 / (myData.orbitRate * orbitData.value))
+        myObject.position.z = Math.sin(myTime * 1.0 / (myData.orbitRate * orbitData.value))
             * myData.distanceFromAxis;
     }
 }
 
 /**
  * Move the moon around its orbit with the planet, and rotate it.
- * @param {type} myMoon
+ * @param {type} mySat
  * @param {type} myPlanet
  * @param {type} myData
  * @param {type} myTime
  * @returns {undefined}
  */
-function moveSat(mySat, myPlanet, myData, myTime) {
-    movePlanet(mySat, myData, myTime);
+function moveSat(mySat, myPlanet, myData, myTime, op) {
+    movePlanet(mySat, myData, myTime, false, op);
     if (orbitData.runOrbit) {
         mySat.position.x = mySat.position.x + myPlanet.position.x;
         mySat.position.z = mySat.position.z + myPlanet.position.z;
